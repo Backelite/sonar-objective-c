@@ -49,7 +49,7 @@ import org.sonar.plugins.objectivec.violations.oclint.*;
 })
 public class ObjectiveCPlugin extends SonarPlugin {
 
-    public List<Class<? extends Extension>> getExtensions() {
+    public List getExtensions() {
         return ImmutableList.of(ObjectiveC.class,
                 ObjectiveCColorizerFormat.class,
                 ObjectiveCCpdMapping.class,
