@@ -60,7 +60,7 @@
             <id>zippy1978</id>
             <name>Gilles Grousset</name>
             <organization>Backelite</organization>
-        </developer>        
+        </developer>
         <developer>
             <id>fhelg</id>
             <name>François Helg</name>
@@ -95,6 +95,7 @@
 
         <maven.test.redirectTestOutputToFile>true</maven.test.redirectTestOutputToFile>
 
+        <sonarqube.version>6.3</sonarqube.version>
         <sonar.version>5.0</sonar.version>
         <sslr.version>1.20</sslr.version>
 
@@ -108,7 +109,7 @@
         <dependency>
             <groupId>org.sonarsource.sonarqube</groupId>
             <artifactId>sonar-plugin-api</artifactId>
-            <version>6.3</version>
+            <version>${sonarqube.version}</version>
         </dependency>
         <dependency>
             <groupId>org.codehaus.sonar</groupId>
