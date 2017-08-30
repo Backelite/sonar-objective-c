@@ -87,9 +87,10 @@ public class FauxPasReportParser {
 
 
             InputFile inputFile = fileSystem.inputFile(fileSystem.predicates().hasAbsolutePath(filePath));
-            Issuable issuable = resourcePerspectives.as(Issuable.class, inputFile);
+            Issuable issuable = (inputFile != null) ? resourcePerspectives.as(Issuable.class, inputFile) : null;
 
             if (issuable != null) {
+
 
                 JSONObject extent = (JSONObject)diagnosticJson.get("extent");
                 JSONObject start = (JSONObject)extent.get("start");
