@@ -111,27 +111,35 @@ public class SurefireParser {
                 parser.parse(report);
 
                 for (TestSuiteReport fileReport : parserHandler.getParsedReports()) {
-                    if ( !fileReport.isValid() || analyzedReports.contains(fileReport)) {
+                    if (!fileReport.isValid() || analyzedReports.contains(fileReport)) {
                         continue;
                     }
+
+                    String testClass = fileReport.getClassKey();
+                    Resource resource = getUnitTestResource(testClass);
+
+                    if (resource == null) {
+                        LOG.warn("file for test class {} not found", testClass);
+                        continue;
+                    }
+
                     if (fileReport.getTests() > 0) {
                         double testsCount = fileReport.getTests() - fileReport.getSkipped();
-                        saveClassMeasure(context, fileReport, CoreMetrics.SKIPPED_TESTS, fileReport.getSkipped());
-                        saveClassMeasure(context, fileReport, CoreMetrics.TESTS, testsCount);
-                        saveClassMeasure(context, fileReport, CoreMetrics.TEST_ERRORS, fileReport.getErrors());
-                        saveClassMeasure(context, fileReport, CoreMetrics.TEST_FAILURES, fileReport.getFailures());
-                        saveClassMeasure(context, fileReport, CoreMetrics.TEST_EXECUTION_TIME, fileReport.getTimeMS());
+                        saveClassMeasure(resource, fileReport, CoreMetrics.SKIPPED_TESTS, fileReport.getSkipped());
+                        saveClassMeasure(resource, fileReport, CoreMetrics.TESTS, testsCount);
+                        saveClassMeasure(resource, fileReport, CoreMetrics.TEST_ERRORS, fileReport.getErrors());
+                        saveClassMeasure(resource, fileReport, CoreMetrics.TEST_FAILURES, fileReport.getFailures());
+                        saveClassMeasure(resource, fileReport, CoreMetrics.TEST_EXECUTION_TIME, fileReport.getTimeMS());
                         double passedTests = testsCount - fileReport.getErrors() - fileReport.getFailures();
                         if (testsCount > 0) {
                             double percentage = passedTests * 100d / testsCount;
-                            saveClassMeasure(context, fileReport, CoreMetrics.TEST_SUCCESS_DENSITY, ParsingUtils.scaleValue(percentage));
+                            saveClassMeasure(resource, fileReport, CoreMetrics.TEST_SUCCESS_DENSITY, ParsingUtils.scaleValue(percentage));
                         }
                         saveTestsDetails(context, fileReport);
                         analyzedReports.add(fileReport);
                     }
                 }
             }
-
         } catch (Exception e) {
             LOG.error("Can not parse surefire reports", e);
             throw new XmlParserException("Can not parse surefire reports", e);
@@ -160,11 +168,10 @@ public class SurefireParser {
         testCaseDetails.append("</tests-details>");
     }
 
-    private void saveClassMeasure(SensorContext context, TestSuiteReport fileReport, Metric metric, double value) {
+    private void saveClassMeasure(Resource resource, TestSuiteReport fileReport, Metric metric, double value) {
 
-        if ( !Double.isNaN(value)) {
-
-            context.saveMeasure(getUnitTestResource(fileReport.getClassKey()), metric, value);
+        if (!Double.isNaN(value)) {
+            context.saveMeasure(resource, metric, value);
 
         }
 
@@ -186,12 +193,21 @@ public class SurefireParser {
 
     public Resource getUnitTestResource(String classname) {
 
-        String fileName = classname.replace('.', '/') + ".m";
+        String baseFileName = classname.replace('.', '/');
+        String mFileName = baseFileName  + ".m";
 
-        InputFile inputFile = fileSystem.inputFile(fileSystem.predicates().or(fileSystem.predicates().matchesPathPattern("**/" + fileName),
-                fileSystem.predicates().matchesPathPattern("**/" + fileName.replace("_", "+"))));
+        InputFile inputFile = fileSystem.inputFile(fileSystem.predicates().or(fileSystem.predicates().matchesPathPattern("**/" + mFileName),
+                fileSystem.predicates().matchesPathPattern("**/" + mFileName.replace("_", "?"))));
+
         if (inputFile == null) {
-            return null;
+            String mmFileName = baseFileName  + ".mm";
+
+            inputFile = fileSystem.inputFile(fileSystem.predicates().or(fileSystem.predicates().matchesPathPattern("**/" + mmFileName),
+                    fileSystem.predicates().matchesPathPattern("**/" + mmFileName.replace("_", "?"))));
+
+            if (inputFile == null) {
+                return null;
+            }
         }
 
         Resource resource = context.getResource(inputFile);
