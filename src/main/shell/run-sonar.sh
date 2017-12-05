@@ -266,7 +266,7 @@ if [ "$testScheme" = "" ] || [ "$unittests" = "" ]; then
 
 	# Put default xml files with no tests and no coverage...
 	echo "<?xml version='1.0' encoding='UTF-8' standalone='yes'?><testsuites name='AllTestUnits'></testsuites>" > sonar-reports/TEST-report.xml
-	echo "<?xml version='1.0' ?><!DOCTYPE coverage SYSTEM 'http://cobertura.sourceforge.net/xml/coverage-03.dtd'><coverage><sources></sources><packages></packages></coverage>" > sonar-reports/coverage.xml
+	echo "<?xml version='1.0' ?><!DOCTYPE coverage SYSTEM 'http://cobertura.sourceforge.net/xml/coverage-03.dtd'><coverage><sources></sources><packages></packages></coverage>" > sonar-reports/coverage-objc.xml
 else
 
     echo -n 'Running tests'
@@ -333,7 +333,7 @@ else
 		slatherCmd+=( --scheme "$appScheme" $firstProject)
 
 		runCommand /dev/stdout "${slatherCmd[@]}"
-		mv sonar-reports/cobertura.xml sonar-reports/coverage.xml
+		mv sonar-reports/cobertura.xml sonar-reports/coverage-objc.xml
 
 	else
 
@@ -359,7 +359,7 @@ else
 		ln -s $coverageFilesPath sonar-reports/build
 
 		# Run gcovr with the right options
-		runCommand "sonar-reports/coverage.xml" gcovr -r . $excludedCommandLineFlags --xml
+		runCommand "sonar-reports/coverage-objc.xml" gcovr -r . $excludedCommandLineFlags --xml
 
 	fi
 

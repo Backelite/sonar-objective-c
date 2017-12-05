@@ -42,7 +42,7 @@ public final class CoberturaSensor implements Sensor {
 
     public static final String REPORT_PATTERN_KEY = ObjectiveCPlugin.PROPERTY_PREFIX
             + ".coverage.reportPattern";
-    public static final String DEFAULT_REPORT_PATTERN = "sonar-reports/coverage*.xml";
+    public static final String DEFAULT_REPORT_PATTERN = "sonar-reports/coverage-objc*.xml";
 
     private final ReportFilesFinder reportFilesFinder;
 
