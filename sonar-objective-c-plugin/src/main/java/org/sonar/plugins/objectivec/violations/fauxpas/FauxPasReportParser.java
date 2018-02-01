@@ -85,33 +85,34 @@ public class FauxPasReportParser {
 
 
             InputFile inputFile = fileSystem.inputFile(fileSystem.predicates().hasAbsolutePath(filePath));
-            Issuable issuable = resourcePerspectives.as(Issuable.class, inputFile);
+            
+            if (inputFile != null) {
+                Issuable issuable = resourcePerspectives.as(Issuable.class, inputFile);
 
-            if (issuable != null && inputFile != null) {
+                if (issuable != null) {
 
-                JSONObject extent = (JSONObject)diagnosticJson.get("extent");
-                JSONObject start = (JSONObject)extent.get("start");
+                    JSONObject extent = (JSONObject)diagnosticJson.get("extent");
+                    JSONObject start = (JSONObject)extent.get("start");
 
-                String info = (String)diagnosticJson.get("info");
-                if (info == null) {
-                    info = (String)diagnosticJson.get("ruleName");
+                    String info = (String)diagnosticJson.get("info");
+                    if (info == null) {
+                        info = (String)diagnosticJson.get("ruleName");
+                    }
+
+                    // Prevent line num 0 case
+                    int lineNum = Integer.parseInt(start.get("line").toString());
+                    if (lineNum == 0) {
+                        lineNum++;
+                    }
+
+                    Issue issue = issuable.newIssueBuilder()
+                            .ruleKey(RuleKey.of(FauxPasRulesDefinition.REPOSITORY_KEY, (String) diagnosticJson.get("ruleShortName")))
+                            .line(lineNum)
+                            .message(info)
+                            .build();
+
+                    issuable.addIssue(issue);
                 }
-
-                // Prevent line num 0 case
-                int lineNum = Integer.parseInt(start.get("line").toString());
-                if (lineNum == 0) {
-                    lineNum++;
-                }
-
-                Issue issue = issuable.newIssueBuilder()
-                        .ruleKey(RuleKey.of(FauxPasRulesDefinition.REPOSITORY_KEY, (String) diagnosticJson.get("ruleShortName")))
-                        .line(lineNum)
-                        .message(info)
-                        .build();
-
-                issuable.addIssue(issue);
-
-
             }
 
         }
