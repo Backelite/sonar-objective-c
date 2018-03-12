@@ -39,6 +39,8 @@ import java.util.Map;
 public class LizardMeasurePersistor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LizardMeasurePersistor.class);
+    private static final String SKIP_FILE_COMPLEXITY = "file_complexity";
+    private static final String SKIP_FUNC_COMPLEXITY = "function_complexity";
 
     private final Project project;
     private final SensorContext sensorContext;
@@ -73,6 +75,12 @@ public class LizardMeasurePersistor {
 
             if (resource != null) {
                 for (Measure measure : entry.getValue()) {
+                    if (measure.getMetric().getKey().equals(SKIP_FILE_COMPLEXITY) || measure.getMetric().getKey().equals(SKIP_FUNC_COMPLEXITY) ) {
+                        LOGGER.info("SKIPPING METRIC: " + String.valueOf(measure.getMetric().getKey()));
+                        continue;
+                    }
+                    LOGGER.info("USING METRIC: " + String.valueOf(measure.getMetric().getKey()));
+
                     try {
                         LOGGER.debug("Save measure {} for file {}", measure.getMetric().getName(), file);
                         sensorContext.saveMeasure(resource, measure);
