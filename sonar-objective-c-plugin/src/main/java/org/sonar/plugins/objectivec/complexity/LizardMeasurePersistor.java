@@ -19,16 +19,18 @@ package org.sonar.plugins.objectivec.complexity;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonar.api.batch.SensorContext;
+import org.sonar.api.batch.fs.FilePredicate;
 import org.sonar.api.batch.fs.FileSystem;
 import org.sonar.api.batch.fs.InputFile;
-import org.sonar.api.measures.Measure;
-import org.sonar.api.resources.Project;
-import org.sonar.api.resources.Resource;
+import org.sonar.api.batch.measure.Metric;
+import org.sonar.api.batch.sensor.SensorContext;
 
+import javax.annotation.Nonnull;
 import java.io.File;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * This class is used to save the measures created by the lizardReportParser in the sonar database
@@ -36,16 +38,14 @@ import java.util.Map;
  * @author Andres Gil Herrera
  * @since 28/05/15.
  */
-public class LizardMeasurePersistor {
+final class LizardMeasurePersistor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LizardMeasurePersistor.class);
 
-    private final Project project;
     private final SensorContext sensorContext;
     private final FileSystem fileSystem;
 
-    public LizardMeasurePersistor(final Project project, final SensorContext sensorContext, final FileSystem fileSystem) {
-        this.project = project;
+    LizardMeasurePersistor(@Nonnull final SensorContext sensorContext, @Nonnull final FileSystem fileSystem) {
         this.sensorContext = sensorContext;
         this.fileSystem = fileSystem;
     }
@@ -54,33 +54,38 @@ public class LizardMeasurePersistor {
      *
      * @param measures Map containing as key the name of the file and as value a list containing the measures for that file
      */
-    public void saveMeasures(final Map<String, List<Measure>> measures) {
-
-        if (measures == null) {
-            return;
-        }
-
-        for (Map.Entry<String, List<Measure>> entry : measures.entrySet()) {
-            File file = new File(fileSystem.baseDir(), entry.getKey());
-            InputFile inputFile = fileSystem.inputFile(fileSystem.predicates().hasAbsolutePath(file.getAbsolutePath()));
-
-            if (inputFile == null) {
-                LOGGER.warn("file not included in sonar {}", entry.getKey());
+    <T extends Serializable> void saveMeasures(@Nonnull final Map<String, List<LizardMeasure<T>>> measures) {
+        for (Map.Entry<String, List<LizardMeasure<T>>> entry : measures.entrySet()) {
+            Optional<InputFile> value = buildInputFile(entry.getKey());
+            if (value.isPresent()) {
+                entry.getValue().forEach(measure -> saveMeasure(value.get(), measure));
                 continue;
             }
 
-            Resource resource = sensorContext.getResource(inputFile);
+            LOGGER.warn("File not included {}", entry.getKey());
+        }
+    }
 
-            if (resource != null) {
-                for (Measure measure : entry.getValue()) {
-                    try {
-                        LOGGER.debug("Save measure {} for file {}", measure.getMetric().getName(), file);
-                        sensorContext.saveMeasure(resource, measure);
-                    } catch (Exception e) {
-                        LOGGER.error(" Exception -> {} -> {}", entry.getKey(), measure.getMetric().getName(), e);
-                    }
-                }
-            }
+    @Nonnull
+    private Optional<InputFile> buildInputFile(@Nonnull String relativeFilePath) {
+        File file = new File(fileSystem.baseDir(), relativeFilePath);
+        FilePredicate predicate = fileSystem.predicates().hasAbsolutePath(file.getAbsolutePath());
+
+        return Optional.ofNullable(fileSystem.inputFile(predicate));
+    }
+
+    private <T extends Serializable> void saveMeasure(@Nonnull InputFile inputFile, @Nonnull LizardMeasure<T> measure) {
+        Metric<T> metric = measure.getMetric();
+
+        try {
+            LOGGER.debug("Save measure {} for file {}", metric.key(), inputFile.relativePath());
+            sensorContext.<T>newMeasure()
+                    .on(inputFile)
+                    .forMetric(metric)
+                    .withValue(measure.getValue())
+                    .save();
+        } catch (Exception e) {
+            LOGGER.error(" Exception -> {} -> {}", inputFile.relativePath(), metric.key(), e);
         }
     }
 
