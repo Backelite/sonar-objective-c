@@ -54,6 +54,14 @@ Category: OCLint
 constant conditional operator
 ----------
 
+Summary: Name: compiler warning
+
+Severity: 3
+Category: OCLint
+
+compiler warning
+----------
+
 Summary: Name: constant conditional operator
 
 Severity: 3
