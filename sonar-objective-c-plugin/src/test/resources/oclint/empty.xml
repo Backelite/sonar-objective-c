@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<oclint version="0.13" url="http://oclint.org">
+    <datetime>2018-02-10T08:50:19Z</datetime>
+    <summary>
+        <property name="number of files">0</property>
+        <property name="files with violations">0</property>
+        <property name="number of priority 1 violations">0</property>
+        <property name="number of priority 2 violations">0</property>
+        <property name="number of priority 3 violations">0</property>
+    </summary>
+    <violations>
+    </violations>
+    <clangstaticanalyzer>
+    </clangstaticanalyzer>
+</oclint>

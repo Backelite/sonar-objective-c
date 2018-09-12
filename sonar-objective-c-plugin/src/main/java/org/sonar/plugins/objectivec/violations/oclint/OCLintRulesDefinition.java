@@ -26,6 +26,7 @@ import org.sonar.api.server.rule.RulesDefinition;
 import org.sonar.plugins.objectivec.core.ObjectiveC;
 import org.sonar.squidbridge.rules.SqaleXmlLoader;
 
+import javax.annotation.Nonnull;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -47,7 +48,7 @@ public class OCLintRulesDefinition implements RulesDefinition {
     private static final String RULES_FILE = "/org/sonar/plugins/oclint/rules.txt";
 
     @Override
-    public void define(Context context) {
+    public void define(@Nonnull Context context) {
 
         NewRepository repository = context
                 .createRepository(REPOSITORY_KEY, ObjectiveC.KEY)
@@ -73,7 +74,7 @@ public class OCLintRulesDefinition implements RulesDefinition {
         final List<String> listLines = IOUtils.readLines(reader);
 
         String previousLine = null;
-        Map<String, String> rule = new HashMap<String, String>();
+        Map<String, String> rule = new HashMap<>();
         boolean inDescription = false;
         for (String line : listLines) {
 
@@ -86,7 +87,7 @@ public class OCLintRulesDefinition implements RulesDefinition {
                 // Remove the rule name from the description of the previous
                 // rule
                 if (rule.get("description") != null) {
-                    String description = rule.get("description").toString();
+                    String description = rule.get("description");
                     final int index = description.lastIndexOf(previousLine);
                     if (index > 0) {
                         rule.put("description", description.substring(0, index));
@@ -107,10 +108,10 @@ public class OCLintRulesDefinition implements RulesDefinition {
                 inDescription = true;
 
                 // Create rule when last filed found
-                RulesDefinition.NewRule newRule = repository.createRule(rule.get("key").toString());
-                newRule.setName(rule.get("name").toString());
-                newRule.setSeverity(rule.get("severity").toString());
-                newRule.setHtmlDescription(rule.get("description").toString());
+                RulesDefinition.NewRule newRule = repository.createRule(rule.get("key"));
+                newRule.setName(rule.get("name"));
+                newRule.setSeverity(rule.get("severity"));
+                newRule.setHtmlDescription(rule.get("description"));
 
             } else if (line.matches("Severity:.*")) {
                 inDescription = false;
@@ -119,7 +120,7 @@ public class OCLintRulesDefinition implements RulesDefinition {
             } else {
                 if (inDescription) {
                     line = ruleDescriptionLink(line);
-                    String description = (String)rule.get("description");
+                    String description = rule.get("description");
                     rule.put("description", description + "<br>" + line);
                 }
             }
